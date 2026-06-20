@@ -44,11 +44,9 @@ npm install
 cp .env.example .env
 php artisan key:generate
 
-# Buat database
-touch database/database.sqlite
-
-# Jalankan migrasi dan seeder
-php artisan migrate --seed
+# Database sudah disertakan (pre-seeded). Tidak perlu langkah tambahan.
+# Jika ingin reset dari awal:
+# php artisan migrate:fresh --seed
 
 # Build assets
 npm run build
@@ -141,7 +139,7 @@ DB_HOST=127.0.0.1
 DB_PORT=3306
 DB_DATABASE=sipedia
 DB_USERNAME=root
-DB_PASSWORD=
+DB_PASSWORD=your_password
 ```
 
 ## Deployment
