@@ -1,0 +1,47 @@
+@import 'tailwindcss';
+
+@plugin '@tailwindcss/forms';
+@plugin '@tailwindcss/typography';
+
+/* Dukungan dark mode berbasis class */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+| DESIGN TOKENS — SI-Pedia
+| Diekstrak langsung (sampling pixel) dari screenshot Figma.
+*/
+@theme {
+    --font-sans: 'Poppins', ui-sans-serif, system-ui, sans-serif;
+    --font-heading: 'Poppins', ui-sans-serif, system-ui, sans-serif;
+
+    /* Ink / Navy — navbar, footer, panel auth kiri */
+    --color-ink-950: #07081f;
+    --color-ink-900: #0a0b2f;
+    --color-ink-800: #14163f;
+
+    /* Brand Blue — aksi primer (Register, Access, Read More, Add Article) */
+    --color-brand-50:  #eef4fb;
+    --color-brand-100: #d6e4f5;
+    --color-brand-300: #8cbcff;
+    --color-brand-400: #5b91d6;
+    --color-brand-500: #4079c4;
+    --color-brand-600: #336cbc;
+    --color-brand-700: #2a589a;
+
+    /* Indigo accent — Save Changes, Select Photo, Apply Filters */
+    --color-accent-500: #5b2ee6;
+    --color-accent-600: #4817da;
+    --color-accent-700: #3a12b3;
+
+    /* Status / badge */
+    --color-status-active: #5d3da2;   /* badge Active */
+    --color-badge-cat:     #8cbcff;   /* badge kategori */
+    --color-edit:          #ffd400;   /* tombol Edit */
+    --color-danger:        #ff1014;   /* tombol Delete */
+
+    /* Netral khusus desain */
+    --color-field:    #c4c4c4;        /* input abu auth */
+    --color-tablehead:#d9d9d9;        /* header tabel */
+    --color-profilebg:#f5e6f0;        /* bg halaman profil */
+    --color-userbadge:#e3c8f6;        /* badge "User" */
+}

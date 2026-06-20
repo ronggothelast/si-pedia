@@ -1,0 +1,111 @@
+<?php
+
+use App\Http\Controllers\ArticleController;
+use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\CommentController;
+use App\Http\Controllers\DosenController;
+use App\Http\Controllers\HomepageController;
+use App\Http\Controllers\PageController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\UserController;
+use Illuminate\Foundation\Auth\EmailVerificationPrompt;
+use Illuminate\Support\Facades\Route;
+
+/*
+|--------------------------------------------------------------------------
+| Web Routes — SI-Pedia
+|--------------------------------------------------------------------------
+*/
+
+// ---------- Publik ----------
+Route::get('/', [PageController::class, 'home'])->name('home');
+Route::get('/about', [PageController::class, 'about'])->name('about');
+Route::get('/catalog', [PageController::class, 'catalog'])->name('catalog');
+Route::get('/articles/{article:slug}', [PageController::class, 'showArticle'])->name('articles.show');
+Route::get('/review', [ReviewController::class, 'index'])->name('review.index');
+
+// ---------- Comments (public read, auth to post) ----------
+Route::get('/articles/{article:slug}/comments', [CommentController::class, 'index'])->name('comments.index');
+Route::post('/articles/{article}/comments', [CommentController::class, 'store'])
+    ->middleware('auth', 'throttle:10,1')
+    ->name('comments.store');
+
+// ---------- Auth ----------
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
+    Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
+    Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:3,1');
+    Route::get('/forgot-password', [AuthController::class, 'showForgot'])->name('password.request');
+    Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])->name('password.email')->middleware('throttle:3,1');
+    Route::get('/reset-password/{token}', [AuthController::class, 'showResetForm'])->name('password.reset');
+    Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.update')->middleware('throttle:3,1');
+});
+Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
+
+// ---------- Email Verification ----------
+Route::get('/email/verify', function () {
+    return view('auth.verify-email');
+})->middleware('auth')->name('verification.notice');
+
+Route::get('/email/verify/{id}/{hash}', function (\Illuminate\Auth\Events\Verified $event) {
+    return redirect('/profile');
+})->middleware(['auth', 'signed', 'throttle:6,1'])->name('verification.verify');
+
+Route::post('/email/verification-notification', function () {
+    request()->user()->sendEmailVerificationNotification();
+    return back()->with('status', 'verification-link-sent');
+})->middleware(['auth', 'throttle:6,1'])->name('verification.send');
+
+// ---------- Profil (login + verified) ----------
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
+    Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+});
+
+// ---------- Admin ----------
+Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/', [PageController::class, 'adminPanel'])->name('panel');
+    Route::get('/report', [PageController::class, 'reportPosts'])->name('report');
+
+    // Artikel
+    Route::get('/articles', [ArticleController::class, 'index'])->name('articles.index');
+    Route::get('/articles/create', [ArticleController::class, 'create'])->name('articles.create');
+    Route::post('/articles', [ArticleController::class, 'store'])->name('articles.store');
+    Route::get('/articles/{article}/edit', [ArticleController::class, 'edit'])->name('articles.edit');
+    Route::put('/articles/{article}', [ArticleController::class, 'update'])->name('articles.update');
+    Route::delete('/articles/{article}', [ArticleController::class, 'destroy'])->name('articles.destroy');
+    Route::patch('/articles/{article}/bulk', [ArticleController::class, 'bulkAction'])->name('articles.bulk');
+
+    // Review (accept / decline)
+    Route::patch('/reviews/{review}/accept', [ReviewController::class, 'accept'])->name('reviews.accept');
+    Route::patch('/reviews/{review}/decline', [ReviewController::class, 'decline'])->name('reviews.decline');
+
+    // Halaman website
+    Route::get('/homepage/edit', [HomepageController::class, 'edit'])->name('homepage.edit');
+    Route::put('/homepage', [HomepageController::class, 'update'])->name('homepage.update');
+    Route::get('/pages/create', [HomepageController::class, 'createPage'])->name('pages.create');
+    Route::post('/pages', [HomepageController::class, 'storePage'])->name('pages.store');
+
+    // Category
+    Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
+    Route::post('/categories', [CategoryController::class, 'store'])->name('categories.store');
+    Route::delete('/categories/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
+
+    // Users
+    Route::get('/users', [UserController::class, 'index'])->name('users.index');
+    Route::patch('/users/{user}/role', [UserController::class, 'updateRole'])->name('users.updateRole');
+
+    // Dosen
+    Route::get('/dosen', [DosenController::class, 'index'])->name('dosen.index');
+    Route::get('/dosen/create', [DosenController::class, 'create'])->name('dosen.create');
+    Route::post('/dosen', [DosenController::class, 'store'])->name('dosen.store');
+    Route::get('/dosen/{lecturer}/edit', [DosenController::class, 'edit'])->name('dosen.edit');
+    Route::put('/dosen/{lecturer}', [DosenController::class, 'update'])->name('dosen.update');
+    Route::get('/dosen/{lecturer}/acc', [DosenController::class, 'acc'])->name('dosen.acc');
+    Route::patch('/dosen/{lecturer}/approve', [DosenController::class, 'approve'])->name('dosen.approve');
+    Route::delete('/dosen/{lecturer}', [DosenController::class, 'destroy'])->name('dosen.destroy');
+});
